@@ -5,6 +5,7 @@ used by other modules
 
 import coverage
 import json
+import os
 
 from contextlib import contextmanager
 from httmock import HTTMock
@@ -31,6 +32,8 @@ def stop_coverage(*args):
     if world.do_coverage:
         world.coverage.stop()
         world.coverage.save()
+        if os.environ['CIRCLE_ARTIFACTS']:
+            world.coverage.report(directory=os.environ['CIRCLE_ARTIFACTS'])
 
 
 @after.each_scenario
