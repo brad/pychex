@@ -1,0 +1,7 @@
+-r base.txt
+
+coverage==3.7.1
+httmock==1.2.2
+lettuce==0.2.20
+nose==1.3.4
+tox==1.8.1

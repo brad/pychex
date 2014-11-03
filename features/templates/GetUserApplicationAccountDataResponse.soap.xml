@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <!-- Removed bulk of content to avoid copyright infringement -->
+    <GetUserApplicationAccountDataResponse xmlns="OneSourceService.asmx">
+      <GetUserApplicationAccountDataResult>
+        <LinkedAccounts>
+          <AccountData>
+            <AppId>BOL</AppId>
+            <ClientId>FAKE_USERNAME_BOL</ClientId>
+          </AccountData>
+        </LinkedAccounts>
+      </GetUserApplicationAccountDataResult>
+    </GetUserApplicationAccountDataResponse>
+  </soap:Body>
+</soap:Envelope>

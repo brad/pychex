@@ -1,0 +1,8 @@
+*.pyc
+*.egg-info
+.coverage*
+.tox
+env
+dist
+
+features/terrain_NOCOMMIT.py
