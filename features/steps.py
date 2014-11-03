@@ -32,8 +32,10 @@ def stop_coverage(*args):
     if world.do_coverage:
         world.coverage.stop()
         world.coverage.save()
-        if os.environ['CIRCLE_ARTIFACTS']:
-            world.coverage.report(directory=os.environ['CIRCLE_ARTIFACTS'])
+        circle_artifacts = os.environ['CIRCLE_ARTIFACTS']
+        if circle_artifacts:
+            filename = os.path.join(circle_artifacts, '.coverage')
+            world.coverage.report(file=filename)
 
 
 @after.each_scenario
