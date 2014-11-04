@@ -17,27 +17,6 @@ from requests.sessions import Session
 from pychex import Paychex
 
 
-@before.all
-def start_coverage():
-    """ Get coverage setup and running """
-    if world.do_coverage:
-        world.coverage = coverage.coverage(branch=True)
-        world.coverage.load()
-        world.coverage.start()
-
-
-@after.all
-def stop_coverage(*args):
-    """ Stop and save coverage report """
-    if world.do_coverage:
-        world.coverage.stop()
-        world.coverage.save()
-        circle_artifacts = os.environ['CIRCLE_ARTIFACTS']
-        if circle_artifacts:
-            filename = os.path.join(circle_artifacts, '.coverage')
-            world.coverage.report(file=filename)
-
-
 @after.each_scenario
 def after_each_scenario(scenario):
     """ Reset some global variables to default """
