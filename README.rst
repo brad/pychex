@@ -1,6 +1,9 @@
 Pychex
 =============
 
+.. image:: https://circleci.com/gh/brad/pychex.png?style=badge
+    :target: https://circleci.com/gh/brad/pychex
+
 Paychex Benefits OnLine access library
 
 Install with `pip install pychex`
