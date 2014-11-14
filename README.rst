@@ -1,8 +1,12 @@
 Pychex
 =============
 
-.. image:: https://circleci.com/gh/brad/pychex.png?style=badge
+.. image:: https://circleci.com/gh/brad/pychex.png?style=shield
     :target: https://circleci.com/gh/brad/pychex
+
+.. image:: https://requires.io/github/brad/pychex/requirements.svg?branch=master
+     :target: https://requires.io/github/brad/pychex/requirements/?branch=master
+     :alt: Requirements Status
 
 Paychex Benefits OnLine access library
 
