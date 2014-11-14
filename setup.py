@@ -24,7 +24,7 @@ setup(
     packages=['pychex'],
     package_data={'': ['LICENSE']},
     include_package_data=True,
-    install_requires=["distribute"] + required,
+    install_requires=["setuptools"] + required,
     license='Apache 2.0',
     tests_require=required + required_test,
     classifiers=(
