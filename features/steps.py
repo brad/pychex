@@ -66,7 +66,7 @@ def contains_session(step_arg):
     """ Check that the Paychex object has a session """
     assert type(world.paychex.session) == Session
     assert type(world.paychex.adapter) == HTTPAdapter
-    assert world.paychex.adapter.max_retries == 3
+    assert world.paychex.adapter.max_retries.total == 3
     text_html = world.paychex.text_html['content-type']
     assert world.paychex.session.headers['content-type'] == text_html
 
