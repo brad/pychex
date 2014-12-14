@@ -17,7 +17,7 @@ from pychex.exceptions import (
 
 
 @urlmatch(scheme='https', netloc=r'landing\.paychex\.com',
-                 path=r'(.*)?GetSecurityImage$')
+          path=r'.*?GetSecurityImage$')
 def paychex_security_image_url_mock(*args):
     """ Mock for the URL that retrieves the Paychex login security image """
     return json.dumps({'d': world.security_image_path})
