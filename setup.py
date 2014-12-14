@@ -27,6 +27,9 @@ setup(
     install_requires=["setuptools"] + required,
     license='Apache 2.0',
     tests_require=required + required_test,
+    entry_points={
+        'console_scripts': ['pychex=pychex.cli:main'],
+    },
     classifiers=(
         'Intended Audience :: Developers',
         'Natural Language :: English',
