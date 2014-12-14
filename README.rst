@@ -13,7 +13,7 @@ Pychex
 
 Paychex Benefits OnLine access library
 
-Install with `pip install pychex`
+Install with :code:`pip install pychex`
 
 Quick start
 ===========
