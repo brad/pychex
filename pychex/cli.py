@@ -41,7 +41,7 @@ class PychexCli:
 
         if arguments['authorize']:
             self.authorize(arguments)
-        else:
+        elif arguments['account_summary']:
             try:
                 self.read_config()
             except (configparser.NoOptionError, configparser.NoSectionError,
@@ -50,6 +50,9 @@ class PychexCli:
                       'pychex authenticate <username>')
             else:
                 self.get_account_summary()
+
+    def get_input(self, text):
+        return input(text).lower()
 
     def read_config(self):
         with open(self.config_file) as cfg:
@@ -74,7 +77,7 @@ class PychexCli:
         paychex.post_username()
         img_dat = requests.get(paychex.get_security_image()).content
         Image.open(StringIO(img_dat)).show()
-        choice = input("Is this your security image (Y/n)? ").lower()
+        choice = self.get_input("Is this your security image (Y/n)? ")
         # input returns the empty string for "enter"
         chose_yes = choice in set(['yes','y', 'ye', ''])
         chose_no = choice in set(['no','n'])
