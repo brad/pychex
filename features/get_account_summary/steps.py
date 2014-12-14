@@ -20,42 +20,42 @@ from pychex.exceptions import (
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?ssologin_es$')
+          path=r'.*?ssologin_es$')
 def paychex_benefits_sso_url_mock(*args):
     """ Mock requests to the benefits ssologin_es URL """
     return open('./features/templates/benefits_ssologin_es.html').read()
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?login\.fcc$')
+          path=r'.*?login\.fcc$')
 def paychex_benefits_login_url_mock(*args):
     """ Mock requests to the benefits login.fcc URL """
     return ''
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?401kstart$')
+          path=r'.*?401kstart$')
 def paychex_401k_start_url_mock(*args):
     """ Mock requests to the retirement app 401kstart URL """
     return open('./features/templates/401kstart.html').read()
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?LoginForm$')
+          path=r'.*?LoginForm$')
 def paychex_401k_login_url_mock(*args):
     """ Mock requests to the retirement app LoginForm URL """
     return ''
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?accountSummary$')
+          path=r'.*?accountSummary$')
 def paychex_401k_summary_url_mock(*args):
     """ Mock requests to the retirement app accountSummary URL """
     return open('./features/templates/accountSummary.html').read()
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-          path=r'(.*)?getBalanceTab$')
+          path=r'.*?getBalanceTab$')
 def paychex_401k_balance_url_mock(*args):
     """ Mock requests to the retirement app getBalanceTab URL """
     return open('./features/templates/getBalanceTab.html').read()

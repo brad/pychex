@@ -16,7 +16,7 @@ from pychex.exceptions import (
 
 
 @urlmatch(scheme='https', netloc=r'landing\.paychex\.com',
-                 path=r'(.*)?OneSourceService.asmx$')
+                 path=r'.*?OneSourceService.asmx$')
 def paychex_account_data_url_mock(*args):
     """
     Mock requests to the Paychex SOAP endpoint for retrieving account data

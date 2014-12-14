@@ -19,14 +19,14 @@ from pychex.exceptions import (
 
 
 @urlmatch(scheme='https', netloc=r'landing\.paychex\.com',
-          path=r'(.*)?ProcessLogin$')
+          path=r'.*?ProcessLogin$')
 def paychex_process_login_url_mock(*args):
     """ Mock requests to the Paychex ProcessLogin URL """
     return json.dumps({'d': '/LandingRedirect.aspx'})
 
 
 @urlmatch(scheme='https', netloc=r'landing\.paychex\.com',
-          path=r'(.*)?login\.fcc$')
+          path=r'.*?login\.fcc$')
 def paychex_login_url_mock(*args):
     """ Mock requests to the Paychex login.fcc URL """
     if world.paychex.common_data['PASSWORD'] == world.password:
