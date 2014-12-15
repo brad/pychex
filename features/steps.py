@@ -10,6 +10,7 @@ import os
 from contextlib import contextmanager
 from httmock import HTTMock
 from lettuce import after, before, step, world
+from mechanicalsoup import Browser
 from nose.tools import assert_equals
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
@@ -64,11 +65,11 @@ def content_types(step_arg):
 @step(r'the Paychex object contains a session')
 def contains_session(step_arg):
     """ Check that the Paychex object has a session """
-    assert type(world.paychex.session) == Session
+    assert world.paychex.browser.__class__ == Browser
     assert type(world.paychex.adapter) == HTTPAdapter
     assert world.paychex.adapter.max_retries.total == 3
     text_html = world.paychex.text_html['content-type']
-    assert world.paychex.session.headers['content-type'] == text_html
+    assert world.paychex.browser.session.headers['content-type'] == text_html
 
 
 @step(r'the Paychex object contains initialized common_data')
@@ -166,3 +167,15 @@ def mock_request(mock_func):
             yield
     else:
         yield
+
+
+
+class HtmlMock:
+    def __init__(self):
+        self.headers = {'Content-Type': 'text/html; charset=utf-8'}
+
+    def build_response(self, file_name=None, content=''):
+        if file_name:
+            with open('./features/templates/%s' % file_name) as open_file:
+                content = open_file.read()
+        return {'content': content, 'headers': self.headers}

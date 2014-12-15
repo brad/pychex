@@ -4,6 +4,7 @@ the class, see the README.
 """
 
 import json
+import mechanicalsoup
 import os
 import re
 import requests
@@ -33,12 +34,12 @@ class Paychex:
         # Prepare the session
         self.app_json = {'content-type': 'application/json; charset=utf-8'}
         self.text_html = {'content-type': 'text/html; charset=utf-8'}
-        self.session = requests.Session()
+        self.browser = mechanicalsoup.Browser()
         # Use an HTTPAdapter with max_retries set to 3 because sometimes
         # the calls throw ConnectionError exceptions for no apparent reason
         self.adapter = requests.adapters.HTTPAdapter(max_retries=3)
-        self.session.mount('https://', self.adapter)
-        self.session.headers.update(self.text_html)
+        self.browser.session.mount('https://', self.adapter)
+        self.browser.session.headers.update(self.text_html)
         # Set up other member variables
         self.logged_in = False
         self.app_username = None
@@ -49,27 +50,20 @@ class Paychex:
         self.personal_ror = None
         self.balance_tab_info = None
 
-    def initialize_session(self):
-        """ Build the session state """
-
-        content = self.session.get(self.start_url).content
-        dom = html.fromstring(content)
-        for key in ['SMENC', 'SMLOCALE', '__VIEWSTATE', '__EVENTVALIDATION']:
-            element = dom.cssselect('input[name="%s"]' % key)[0]
-            self.common_data[key] = element.value
-        self.initialized = True
-
     def post_username(self):
         """
         Post the username and save the security image. It is up to the
         client to verify this is the corrert security image before proceeding
         """
 
-        self.initialize_session()
-        self.session.headers.update(self.app_json)
+        # No need to verify the certificate on this page as it's not where we
+        # post the username/password
+        requests.packages.urllib3.disable_warnings()
+        self.login_page = self.browser.get(self.start_url, verify=False)
+        self.browser.session.headers.update(self.app_json)
         data = json.dumps({'enteredUsername': self.common_data['USER']})
-        res = self.session.post('%s/GetSecurityImage' % self.login_url,
-                                data=data)
+        res = self.browser.post('%s/GetSecurityImage' % self.login_url,
+                                        data=data)
         security_image_path = res.json()['d']
         if not self.security_image_path:
             self.security_image_path = security_image_path
@@ -99,16 +93,17 @@ class Paychex:
             'eu': self.common_data['USER'],
             'ep': self.common_data['PASSWORD']
         })
-        res = self.session.post("%s/ProcessLogin" % self.login_url, data=data)
+        res = self.browser.post("%s/ProcessLogin" % self.login_url, data=data)
 
         # Submit the login form
-        redirect_url = res.json()['d']
-        self.session.headers.update(self.text_html)
-        data = {'target': redirect_url}
-        data.update(self.common_data)
-        res = self.session.post('%s/ssologin/login.fcc' % self.base_url,
-                                data=data)
-        errors = html.fromstring(res.content).cssselect('#Error_Login .Error')
+        login_form = self.login_page.soup.select('#Serverform')[0]
+        login_form.select('#USER')[0]['value'] = self.common_data['USER']
+        login_form.select('#PASSWORD')[0]['value'] = self.common_data['PASSWORD']
+        login_form.select('#target')[0]['value'] = res.json()['d']
+        self.browser.session.headers.update(self.text_html)
+        logged_in_page = self.browser.submit(
+            login_form, '%s/ssologin/' % self.base_url)
+        errors = logged_in_page.soup.select('#Error_Login .Error')
         if len(errors) == 0:
             self.logged_in = True
         else:
@@ -130,7 +125,7 @@ class Paychex:
         data = soap_content.format(**self.common_data)
         service = 'OneSourceService.asmx'
         soap_action = '%s/GetUserApplicationAccountData' % service
-        res = self.session.post(
+        res = self.browser.post(
             '%s/%s' % (self.base_url, service), data=data, headers={
                 'Referer': 'Pychex',
                 'Content-Type': 'text/xml; charset=utf-8',
@@ -160,65 +155,57 @@ class Paychex:
             self.get_account_data()
 
         # Load the Benefits portal
-        res = self.session.post(
+        res = self.browser.post(
             '%s/cgi-bin/contactus_es/ssologin_es' % self.benefits_url, data={
-                'NOVIEWSTATE': self.common_data['__VIEWSTATE'],
-                '__EVENTVALIDATION': self.common_data['__EVENTVALIDATION'],
                 'AppPass': self.common_data['PASSWORD'],
                 'AppUsername': self.app_username
             })
-        dom = html.fromstring(res.content)
         data = {
             'USER': self.app_username,
-            'target': dom.cssselect('#target')[0].value
+            'target': res.soup.select('#target')[0]['value']
         }
-        data = dict(self.common_data.items() + data.items())
-        self.session.post(
-            '%s/smlogin/login.fcc' % self.benefits_url, data=data)
+        self.browser.post('%s/smlogin/login.fcc' % self.benefits_url,
+                          data=dict(self.common_data.items() + data.items()))
 
         # Load Retirement services app
-        res = self.session.get(
-            '%s/cgi-bin/401k/401kstart' % self.benefits_url)
-        dom = html.fromstring(res.content)
-        self.session.post(
+        res = self.browser.get('%s/cgi-bin/401k/401kstart' % self.benefits_url)
+        self.browser.post(
             '%s/401k_emp/do/LoginForm' % self.benefits_url, data={
                 'uid': self.app_username,
-                'ssn': dom.cssselect('input[NAME="ssn"]')[0].value,
+                'ssn': res.soup.select('input[name="ssn"]')[0]['value'],
                 'uid_emulation': self.app_username
             })
 
         # Get the account summary
-        res = self.session.get(
+        res = self.browser.get(
             '%s/401k_emp/xhr/accountSummary' % self.benefits_url)
-        dom = html.fromstring(res.content)
-        welcomeBoxData = dom.cssselect('div.welcomeBoxData')
+        welcomeBoxData = res.soup.select('div.welcomeBoxData')
         self.current_balance = welcomeBoxData[0].text
         self.vested_balance = welcomeBoxData[1].text
-        self.personal_ror = dom.cssselect('div.welcomeBoxRorData')[0].text
+        self.personal_ror = res.soup.select('div.welcomeBoxRorData')[0].text
 
         # Get the balance tab data
-        res = self.session.get(
+        res = self.browser.get(
             '%s/401k_emp/do/xhr/getBalanceTab' % self.benefits_url)
-        dom = html.fromstring(res.content)
-        funds = dom.cssselect('#balanceByFundTable tr')
+        funds = res.soup.select('#balanceByFundTable tr')
         self.balance_tab_info = {}
         cls = ['percent', 'symbol', 'fund', 'shares', 'balance', 'prospectus']
         for fund in funds:
-            cells = fund.cssselect('td')
+            cells = fund.select('td')
             fund_dict = {}
             symbol = None
             for i, cell_title in enumerate(cls):
                 if cell_title == 'fund':
-                    link = cells[i].cssselect('a')
-                    onclick = link[0].attrib['onclick']
+                    link = cells[i].select('a')
+                    onclick = link[0]['onclick']
                     search = re.search(r"window.open\('(.*)'\)", onclick)
                     fund_dict[cell_title] = {
                         'name': link[0].text.strip(),
                         'url': search.groups()[0].replace('&amp;', '&')
                     }
                 elif cell_title == 'prospectus':
-                    element = cells[i].cssselect('acronym img')[0]
-                    onclick = element.attrib['onclick']
+                    element = cells[i].select('acronym img')[0]
+                    onclick = element['onclick']
                     search = re.search(r"window.open\('(.*)'\)", onclick)
                     cell_text = search.groups()[0]
                     fund_dict[cell_title] = cell_text.replace('&amp;', '&')

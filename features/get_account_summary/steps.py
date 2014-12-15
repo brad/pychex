@@ -12,7 +12,7 @@ from nose.tools import assert_equals
 
 from features.get_account_data.steps import paychex_account_data_url_mock
 from features.login.steps import mock_login_requests
-from features.steps import mock_request
+from features.steps import HtmlMock, mock_request
 from pychex.exceptions import (
     PychexNoAppUsernameError,
     PychexUnauthenticatedError
@@ -23,7 +23,7 @@ from pychex.exceptions import (
           path=r'.*?ssologin_es$')
 def paychex_benefits_sso_url_mock(*args):
     """ Mock requests to the benefits ssologin_es URL """
-    return open('./features/templates/benefits_ssologin_es.html').read()
+    return HtmlMock().build_response(file_name='benefits_ssologin_es.html')
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
@@ -37,7 +37,7 @@ def paychex_benefits_login_url_mock(*args):
           path=r'.*?401kstart$')
 def paychex_401k_start_url_mock(*args):
     """ Mock requests to the retirement app 401kstart URL """
-    return open('./features/templates/401kstart.html').read()
+    return HtmlMock().build_response(file_name='401kstart.html')
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
@@ -51,14 +51,14 @@ def paychex_401k_login_url_mock(*args):
           path=r'.*?accountSummary$')
 def paychex_401k_summary_url_mock(*args):
     """ Mock requests to the retirement app accountSummary URL """
-    return open('./features/templates/accountSummary.html').read()
+    return HtmlMock().build_response('accountSummary.html')
 
 
 @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
           path=r'.*?getBalanceTab$')
 def paychex_401k_balance_url_mock(*args):
     """ Mock requests to the retirement app getBalanceTab URL """
-    return open('./features/templates/getBalanceTab.html').read()
+    return HtmlMock().build_response('getBalanceTab.html')
 
 
 @step(r'I call the get_account_summary method$')

@@ -11,7 +11,7 @@ from lettuce import step, world
 from contextlib import contextmanager
 from features.post_username.steps import paychex_security_image_url_mock
 from features.session.steps import paychex_start_url_mock
-from features.steps import mock_request
+from features.steps import HtmlMock, mock_request
 from pychex.exceptions import (
     PychexSecurityImageMissingError,
     PychexInvalidPasswordError
@@ -30,9 +30,9 @@ def paychex_process_login_url_mock(*args):
 def paychex_login_url_mock(*args):
     """ Mock requests to the Paychex login.fcc URL """
     if world.paychex.common_data['PASSWORD'] == world.password:
-        return '<html></html>'
+        return HtmlMock().build_response(content='<html></html>')
     else:
-        return open('./features/templates/paychex_login_invalid.fcc').read()
+        return HtmlMock().build_response('paychex_login_invalid.fcc')
 
 
 @step(r'I call the login method$')
