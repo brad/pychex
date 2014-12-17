@@ -17,7 +17,6 @@ import requests
 from base64 import b64decode, b64encode
 from docopt import docopt
 from PIL import Image
-from StringIO import StringIO
 from tabulate import tabulate
 
 from . import __version__
@@ -25,13 +24,20 @@ from .paychex import Paychex
 
 try:
     import configparser
+    from io import BytesIO
 except ImportError:  # Python 2.x fallback
     import ConfigParser as configparser
+    from StringIO import StringIO as BytesIO
 
 try:
     input = raw_input
 except NameError:  # Python > 3.1 has no raw_input
     pass
+
+try:
+    from collections import OrderedDict
+except ImportError:  # Python 2.6 fallback
+    from ordereddict import OrderedDict
 
 
 class PychexCli:
@@ -57,17 +63,17 @@ class PychexCli:
     def read_config(self):
         with open(self.config_file) as cfg:
             self.config.readfp(cfg)
-        self.username = b64decode(self.config.get('pychex', 'username'))
-        self.security_image_path = b64decode(self.config.get(
+        self.username = self.b64decode(self.config.get('pychex', 'username'))
+        self.security_image_path = self.b64decode(self.config.get(
             'pychex', 'security_image_path'))
-        self.password = b64decode(self.config.get('pychex', 'password'))
+        self.password = self.b64decode(self.config.get('pychex', 'password'))
 
     def write_config(self, security_image_path, password):
         self.config.add_section('pychex')
-        self.config.set('pychex', 'username', b64encode(self.username))
+        self.config.set('pychex', 'username', self.b64encode(self.username))
         self.config.set('pychex', 'security_image_path',
-                        b64encode(security_image_path))
-        self.config.set('pychex', 'password', b64encode(password))
+                        self.b64encode(security_image_path))
+        self.config.set('pychex', 'password', self.b64encode(password))
         with open(self.config_file, 'w') as cfg:
             self.config.write(cfg)
 
@@ -76,11 +82,11 @@ class PychexCli:
         paychex = Paychex(self.username)
         paychex.post_username()
         img_dat = requests.get(paychex.get_security_image()).content
-        Image.open(StringIO(img_dat)).show()
+        Image.open(BytesIO(img_dat)).show()
         choice = self.get_input("Is this your security image (Y/n)? ")
         # input returns the empty string for "enter"
-        chose_yes = choice in set(['yes','y', 'ye', ''])
-        chose_no = choice in set(['no','n'])
+        chose_yes = choice in set(['yes', 'y', 'ye', ''])
+        chose_no = choice in set(['no', 'n'])
         if not chose_yes and not chose_no:
             print("Please respond with 'yes' or 'no'.")
         if not chose_yes and not chose_no or chose_no:
@@ -102,20 +108,33 @@ class PychexCli:
         print('Vested balance: %s' % paychex.vested_balance)
         print('Personal RoR: %s\n' % paychex.personal_ror)
 
+        # Reformat the information in a way that is more palatable to tabulate
         balances = [v for (k, v) in paychex.balance_tab_info.items()]
         if len(balances):
             urls = []
-            for i, balance in enumerate(balances):
+            ordered_balances = []
+            ordered_keys = ['percent', 'symbol', 'fund', 'shares', 'balance',
+                            'prospectus']
+            symbol_sort = lambda balance: balance['symbol']
+            for i, balance in enumerate(sorted(balances, key=symbol_sort)):
                 urls.append(balance['fund']['url'])
-                balances[i]['fund'] = '%s [%i]' % (balance['fund']['name'],
-                                                   len(urls))
+                balance['fund'] = '%s [%i]' % (balance['fund']['name'],
+                                               len(urls))
                 urls.append(balance['prospectus'])
-                balances[i]['prospectus'] = '[%i]' % len(urls)
+                balance['prospectus'] = '[%i]' % len(urls)
+                ordered_balances.append(OrderedDict([
+                    (key, balance[key]) for key in ordered_keys]))
 
-            print(tabulate(balances, headers='keys'))
+            print(tabulate(ordered_balances, headers='keys'))
             print('')
             for i, url in enumerate(urls):
-                print('[%i] %s' % (i, url))
+                print('[%i] %s' % (i+1, url))
+
+    def b64encode(self, str_):
+        return b64encode(str_.encode('utf8')).decode('utf8')
+
+    def b64decode(self, str_):
+        return b64decode(str_.encode('utf8')).decode('utf8')
 
 
 def main():

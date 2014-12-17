@@ -3,8 +3,9 @@ This module contains all non-test modules, classes, methods, etc for the
 Pychex library, as well as XML templates
 """
 
-from pychex.paychex import Paychex
+from pychex.paychex import *
 
+__all__ = ['Paychex']
 __title__ = 'pychex'
 __author__ = 'Brad Pitcher'
 __author_email__ = 'bradpitcher@gmail.com'

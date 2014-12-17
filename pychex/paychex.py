@@ -9,7 +9,7 @@ import os
 import re
 import requests
 
-from lxml import html, objectify
+from lxml import objectify
 
 from .exceptions import (
     PychexInvalidPasswordError,
@@ -63,7 +63,7 @@ class Paychex:
         self.browser.session.headers.update(self.app_json)
         data = json.dumps({'enteredUsername': self.common_data['USER']})
         res = self.browser.post('%s/GetSecurityImage' % self.login_url,
-                                        data=data)
+                                data=data)
         security_image_path = res.json()['d']
         if not self.security_image_path:
             self.security_image_path = security_image_path
@@ -96,13 +96,13 @@ class Paychex:
         res = self.browser.post("%s/ProcessLogin" % self.login_url, data=data)
 
         # Submit the login form
-        login_form = self.login_page.soup.select('#Serverform')[0]
-        login_form.select('#USER')[0]['value'] = self.common_data['USER']
-        login_form.select('#PASSWORD')[0]['value'] = self.common_data['PASSWORD']
-        login_form.select('#target')[0]['value'] = res.json()['d']
+        form = self.login_page.soup.select('#Serverform')[0]
+        form.select('#USER')[0]['value'] = self.common_data['USER']
+        form.select('#PASSWORD')[0]['value'] = self.common_data['PASSWORD']
+        form.select('#target')[0]['value'] = res.json()['d']
         self.browser.session.headers.update(self.text_html)
         logged_in_page = self.browser.submit(
-            login_form, '%s/ssologin/' % self.base_url)
+            form, '%s/ssologin/' % self.base_url)
         errors = logged_in_page.soup.select('#Error_Login .Error')
         if len(errors) == 0:
             self.logged_in = True
@@ -160,12 +160,13 @@ class Paychex:
                 'AppPass': self.common_data['PASSWORD'],
                 'AppUsername': self.app_username
             })
-        data = {
+        data = self.common_data.copy()
+        data.update({
             'USER': self.app_username,
             'target': res.soup.select('#target')[0]['value']
-        }
+        })
         self.browser.post('%s/smlogin/login.fcc' % self.benefits_url,
-                          data=dict(self.common_data.items() + data.items()))
+                          data=data)
 
         # Load Retirement services app
         res = self.browser.get('%s/cgi-bin/401k/401kstart' % self.benefits_url)

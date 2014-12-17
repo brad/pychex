@@ -6,5 +6,5 @@ coverage
 env
 dist
 
-features/terrain_NOCOMMIT.py
-pychex.cfg
+features/environment_NOCOMMIT.py
+pychex*.cfg

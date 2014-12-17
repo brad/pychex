@@ -5,8 +5,9 @@ import re
 
 from setuptools import setup
 
-required = [line for line in open('requirements/base.txt').read().split("\n")]
-required_test = [line for line in open('requirements/test.txt').read().split("\n") if not line.startswith("-r")]
+
+req = [line for line in open('requirements/base.txt').read().split("\n")]
+req_test = [line for line in open('requirements/test.txt').read().split("\n")]
 
 pcinit = open('pychex/__init__.py').read()
 author = re.search("__author__ = '([^']+)'", pcinit).group(1)
@@ -24,9 +25,9 @@ setup(
     packages=['pychex'],
     package_data={'': ['LICENSE']},
     include_package_data=True,
-    install_requires=["setuptools"] + required,
+    install_requires=['setuptools'] + req,
     license='Apache 2.0',
-    tests_require=required + required_test,
+    tests_require=req_test,
     entry_points={
         'console_scripts': ['pychex=pychex.cli:main'],
     },
@@ -36,6 +37,11 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6'
-        'Programming Language :: Python :: 2.7'
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: Implementation :: PyPy'
     ),
 )
