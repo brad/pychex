@@ -76,4 +76,4 @@ Slow start
 Requirements
 ============
 
-* Python 2.6 or 2.7
+* Python 2.6+ (including Python 3.x) or PyPy
