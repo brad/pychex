@@ -13,19 +13,19 @@ Pychex
 
 Paychex Benefits OnLine access library
 
-Install with :code:`pip install pychex`
+Install with `pip install pychex`
 
 Quick start
 ===========
 
-After installing you will have use of a command line :code:`pychex` client
-application. Run :code:`pychex authorize <username>` to confirm your security
+After installing you will have use of a command line `pychex` client
+application. Run `pychex authorize <username>` to confirm your security
 image and login. This will save your encrypted credentials to a
-:code:`pychex.cfg` file. NOTE: The encryption does very little to protect your
+`pychex.cfg` file. NOTE: The encryption does very little to protect your
 credentials from a determined and malicious intruder, and the ultimate
 responsibility in protecting your credentials is yours. After you have
 authorized the client, you can get a printout of your account summary by
-running :code:`pychex account_summary`. Full usage instructions below: ::
+running `pychex account_summary`. Full usage instructions below: ::
     Pychex command-line interface
 
     Usage:
