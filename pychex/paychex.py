@@ -115,6 +115,7 @@ class Paychex:
 
     def get_account_data(self):
         """ Get the Benefits OnLine app username via SOAP """
+
         if not self.logged_in:
             raise PychexUnauthenticatedError(
                 'You must login before calling get_account_data')
@@ -155,27 +156,22 @@ class Paychex:
             self.get_account_data()
 
         # Load the Benefits portal
+        # SSOLogin
         res = self.browser.post(
             '%s/cgi-bin/contactus_es/ssologin_es' % self.benefits_url, data={
                 'AppPass': self.common_data['PASSWORD'],
                 'AppUsername': self.app_username
             })
-        data = self.common_data.copy()
-        data.update({
-            'USER': self.app_username,
-            'target': res.soup.select('#target')[0]['value']
-        })
-        self.browser.post('%s/smlogin/login.fcc' % self.benefits_url,
-                          data=data)
+        # Standard Login
+        form = res.soup.select('form[name="PaychexStdLogin"]')[0]
+        form['action'] = '%s/smlogin/login.fcc' % self.benefits_url
+        self.browser.submit(form)
 
         # Load Retirement services app
         res = self.browser.get('%s/cgi-bin/401k/401kstart' % self.benefits_url)
-        self.browser.post(
-            '%s/401k_emp/do/LoginForm' % self.benefits_url, data={
-                'uid': self.app_username,
-                'ssn': res.soup.select('input[name="ssn"]')[0]['value'],
-                'uid_emulation': self.app_username
-            })
+        form = res.soup.select('form[name="PaychexSSNLogin"]')[0]
+        form['action'] = '%s/401k_emp/do/LoginForm' % self.benefits_url
+        self.browser.submit(form)
 
         # Get the account summary
         res = self.browser.get(
