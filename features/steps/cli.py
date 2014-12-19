@@ -137,7 +137,7 @@ Personal RoR: X.X%
 """
 
 
-@then(u'we remind the user to authorize')
+@then('we remind the user to authorize')
 def authorize_reminder(context):
     assert context.stdout_capture.getvalue() == (
         'Error reading credentials, please run: pychex authenticate '
