@@ -1,7 +1,7 @@
 """
 This file is for all tests related to the CLI client
 """
-from behave import step
+from behave import given, then, step
 from mock import MagicMock
 
 from pychex.cli import PychexCli
@@ -20,35 +20,55 @@ except ImportError:  # Python 2.x fallback
     from mock import patch
 
 
+@given('I have not authorized the CLI')
+def not_authorized(context):
+    """
+    Make sure the user isn't authorized by pointing to a non-existing config
+    file
+    """
+    context.config_file = 'NON_EXISTENT_FILE.cfg'
+
+
+@given('my config is missing the pychex section')
+def missing_section(context):
+    """ See what happens when the pychex section is missing from the config """
+    context.config_file = './features/files/missing-section.cfg'
+
+
+@given('my config is missing an option')
+def missing_option(context):
+    """ See what happens when an option is missing from the config """
+    context.config_file = './features/files/missing-option.cfg'
+
+
 @step('I run the authorize command')
-def authorize(context):
+@patch('PIL.Image.open')
+@patch('getpass.getpass')
+@patch('pychex.cli.PychexCli.get_input')
+def authorize(context, input_mock, getpass_mock, image_open_mock):
     """ Test running the authorize method """
     with mock_login_requests(context):
-        with patch('pychex.cli.PychexCli.get_input') as input_mock:
-            with patch('getpass.getpass') as getpass_mock:
-                with patch('PIL.Image.open') as image_open_mock:
-                    with mock_request(context, FileMock().security_image_gif):
-                        getpass_mock.return_value = context.password
-                        input_mock.return_value = 'y'
-                        arguments = {
-                            'authorize': True,
-                            '--config': './pychex-test.cfg',
-                            '<username>': context.username
-                        }
-                        pychex_cli = PychexCli(arguments)
-                        input_mock.assert_called_once_with(
-                            "Is this your security image (Y/n)? ")
-                        assert image_open_mock.call_count == 1
-                        getpass_mock.assert_called_once_with(
-                            "Password (input hidden): ")
-                        assert pychex_cli.username == context.username
+        with mock_request(context, FileMock().security_image_gif):
+            getpass_mock.return_value = context.password
+            input_mock.return_value = 'y'
+            arguments = {
+                'authorize': True,
+                '--config': context.config_file,
+                '<username>': context.username
+            }
+            pychex_cli = PychexCli(arguments)
+            input_mock.assert_called_once_with(
+                "Is this your security image (Y/n)? ")
+            assert image_open_mock.call_count == 1
+            getpass_mock.assert_called_once_with("Password (input hidden): ")
+            assert pychex_cli.username == context.username
 
 
-@step('the {config_file} file should contain the encrypted credentials')
-def cfg_credentials(context, config_file):
+@step('the config file should contain the encrypted credentials')
+def cfg_credentials(context):
     """ Check the credentials in the config file """
     arguments = {
-        '--config': './%s' % config_file,
+        '--config': context.config_file,
         'authorize': False,
         'account_summary': False
     }
@@ -84,9 +104,12 @@ def run_account_summary(context):
                 arguments = {
                     'authorize': False,
                     'account_summary': True,
-                    '--config': './pychex-test.cfg'
+                    '--config': context.config_file
                 }
-                PychexCli(arguments)
+                try:
+                    PychexCli(arguments)
+                except:
+                    pass
 
 
 @step('I should see my account summary')
@@ -112,3 +135,10 @@ Personal RoR: X.X%
 [7] http://www.example.com/?product=FUNDS&custno=1&FUNDID=4
 [8] http://www.example.com/?product=PROSP&custno=1&FUNDID=4
 """
+
+
+@then(u'we remind the user to authorize')
+def authorize_reminder(context):
+    assert context.stdout_capture.getvalue() == (
+        'Error reading credentials, please run: pychex authenticate '
+        '<username>\n')

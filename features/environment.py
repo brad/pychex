@@ -33,6 +33,7 @@ def before_all(context):
     context.security_image_path = SECURITY_IMAGE_PATH
     context.password = PASSWORD
     context.app_username = APP_USERNAME
+    context.config_file = './pychex-test.cfg'
 
     context.exceptions = []
     context.has_bol = True

@@ -7,7 +7,8 @@ from httmock import HTTMock, response, urlmatch
 class FileMock(object):
     def build_response(self, file_name=None, content=''):
         if file_name:
-            with open('./features/templates/%s' % file_name, 'rb') as file_obj:
+            base_path = './features/files/templates/'
+            with open('%s%s' % (base_path, file_name), 'rb') as file_obj:
                 content = file_obj.read()
         return {'content': content, 'headers': self.headers}
 

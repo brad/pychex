@@ -129,7 +129,7 @@ def raised_exception_while_mocking(context, exception_type):
 
 
 def _raised_exception(context, exception_type, mocking_only=False):
-    """ Check that the expected exception was raised, only if mocking  """
+    """ Check that the expected exception was raised """
     if mocking_only and not context.mock_requests:
         # Skip this test if we are not mocking requests
         return
