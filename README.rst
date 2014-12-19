@@ -39,7 +39,9 @@ running `pychex account_summary`. Full usage instructions below: ::
 
 Slow start
 ==========
-::
+
+And here are some examples for how to use it programatically: ::
+
     >>> from pychex import Paychex
     >>> paychex = Paychex(username)
     >>> paychex.post_username()
