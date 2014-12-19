@@ -1,15 +1,15 @@
 Pychex
-=============
+======
 
 .. image:: https://travis-ci.org/brad/pychex.svg?branch=master
-    :target: https://travis-ci.org/brad/pychex
+   :target: https://travis-ci.org/brad/pychex
 
 .. image:: https://coveralls.io/repos/brad/pychex/badge.png?branch=master
-    :target: https://coveralls.io/r/brad/pychex?branch=master
+   :target: https://coveralls.io/r/brad/pychex?branch=master
 
 .. image:: https://requires.io/github/brad/pychex/requirements.svg?branch=master
-     :target: https://requires.io/github/brad/pychex/requirements/?branch=master
-     :alt: Requirements Status
+   :target: https://requires.io/github/brad/pychex/requirements/?branch=master
+   :alt: Requirements Status
 
 Paychex Benefits OnLine access library
 
