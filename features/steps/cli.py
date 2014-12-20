@@ -1,6 +1,8 @@
 """
 This file is for all tests related to the CLI client
 """
+from __future__ import unicode_literals
+
 from behave import given, then, step
 from mock import MagicMock
 
@@ -41,7 +43,21 @@ def missing_option(context):
     context.config_file = './features/files/missing-option.cfg'
 
 
-@step('I run the authorize command')
+@given('I answer "{answer}" to the security question during authorization')
+def authorize_answer(context, answer):
+    """ Test running the authorize method with a specific answer """
+    context.security_answer = answer
+    context.execute_steps('Given I run the authorize command')
+
+
+@given('I answer "" to the security question during authorization')
+def authorize_blank_answer(context):
+    """ Test running the authorize method with a blank answer """
+    context.security_answer = ''
+    context.execute_steps('Given I run the authorize command')
+
+
+@given('I run the authorize command')
 @patch('PIL.Image.open')
 @patch('getpass.getpass')
 @patch('pychex.cli.PychexCli.get_input')
@@ -50,7 +66,7 @@ def authorize(context, input_mock, getpass_mock, image_open_mock):
     with mock_login_requests(context):
         with mock_request(context, FileMock().security_image_gif):
             getpass_mock.return_value = context.password
-            input_mock.return_value = 'y'
+            input_mock.return_value = context.security_answer
             arguments = {
                 'authorize': True,
                 '--config': context.config_file,
@@ -58,10 +74,12 @@ def authorize(context, input_mock, getpass_mock, image_open_mock):
             }
             pychex_cli = PychexCli(arguments)
             input_mock.assert_called_once_with(
-                "Is this your security image (Y/n)? ")
+                'Is this your security image (Y/n)? ')
             assert image_open_mock.call_count == 1
-            getpass_mock.assert_called_once_with("Password (input hidden): ")
-            assert pychex_cli.username == context.username
+            if context.security_answer in ['yes', 'y', 'ye', '']:
+                getpass_mock.assert_called_once_with(
+                    'Password (input hidden): ')
+                assert pychex_cli.username == context.username
 
 
 @step('the config file should contain the encrypted credentials')
@@ -142,3 +160,14 @@ def authorize_reminder(context):
     assert context.stdout_capture.getvalue() == (
         'Error reading credentials, please run: pychex authenticate '
         '<username>\n')
+
+
+@then('I should see a reminder to answer "yes" or "no"')
+def answer_reminder(context):
+    assert context.stdout_capture.getvalue() == (
+        'Please respond with "yes" or "no".\n')
+
+
+@then("I should see a notice that the security image didn't match")
+def answer_reminder(context):
+    assert context.stdout_capture.getvalue() == 'Security image mismatch.\n'

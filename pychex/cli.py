@@ -83,17 +83,17 @@ class PychexCli:
         paychex.post_username()
         img_dat = requests.get(paychex.get_security_image()).content
         Image.open(BytesIO(img_dat)).show()
-        choice = self.get_input("Is this your security image (Y/n)? ")
+        choice = self.get_input('Is this your security image (Y/n)? ')
         # input returns the empty string for "enter"
         chose_yes = choice in set(['yes', 'y', 'ye', ''])
         chose_no = choice in set(['no', 'n'])
-        if not chose_yes and not chose_no:
-            print("Please respond with 'yes' or 'no'.")
-        if not chose_yes and not chose_no or chose_no:
-            print("Security image mismatch.")
+        if chose_no:
+            print('Security image mismatch.')
+        elif not chose_yes:
+            print('Please respond with "yes" or "no".')
         else:
             # Get the password and write the credentials to a file
-            password = getpass.getpass("Password (input hidden): ")
+            password = getpass.getpass('Password (input hidden): ')
             self.write_config(paychex.security_image_path, password)
             print('Credentials written to %s' % self.config_file)
 

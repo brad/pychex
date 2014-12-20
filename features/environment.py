@@ -15,6 +15,9 @@ if not MOCK_REQUESTS:
     APP_USERNAME = 'YOUR_APP_USERNAME'   # Obtained by get_account_data
 """
 
+import os
+
+
 MOCK_REQUESTS = True
 USERNAME = 'FAKE_USERNAME'
 SECURITY_IMAGE_PATH = '/ssologin/Media/Images/Security/Butterfly.gif'
@@ -27,21 +30,22 @@ except ImportError:
     pass
 
 
-def before_all(context):
+def before_scenario(context, scenario):
+    """ Reset some global variables to default """
+    # Make sure the test config file doesn't exist
+    if hasattr(context, 'config_file') and os.path.isfile(context.config_file):
+        os.remove(context.config_file)
+
+    # Reset vars
     context.mock_requests = MOCK_REQUESTS
     context.username = USERNAME
     context.security_image_path = SECURITY_IMAGE_PATH
     context.password = PASSWORD
     context.app_username = APP_USERNAME
+    context.exceptions = []
+    context.has_bol = True
     context.config_file = './pychex-test.cfg'
-
-    context.exceptions = []
-    context.has_bol = True
-    context.do_coverage = True
-
-
-def before_scenario(context, scenario):
-    """ Reset some global variables to default """
-    context.exceptions = []
-    context.has_bol = True
+    if os.path.isfile(context.config_file):
+        os.remove(context.config_file)
+    context.security_answer = 'yes'
     return context
