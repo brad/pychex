@@ -4,13 +4,19 @@ from contextlib import contextmanager
 from httmock import HTTMock, response, urlmatch
 
 
-class FileMock(object):
+class PychexMock(object):
+    def __init__(self, http_status=200):
+        self.http_status = http_status
+
+
+class FileMock(PychexMock):
     def build_response(self, file_name=None, content=''):
         if file_name:
             base_path = './features/files/templates/'
             with open('%s%s' % (base_path, file_name), 'rb') as file_obj:
                 content = file_obj.read()
-        return {'content': content, 'headers': self.headers}
+        return {'content': content, 'headers': self.headers,
+                'status_code': self.http_status}
 
     @urlmatch(scheme='https', netloc=r'landing\.paychex\.com',
               path=r'.*?Butterfly.gif$')
@@ -36,12 +42,6 @@ class HtmlMock(FileMock):
     def paychex_benefits_sso(self, *args):
         """ Mock requests to the benefits ssologin_es URL """
         return self.build_response('benefits_ssologin_es.html')
-
-    @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
-              path=r'.*?login\.fcc$')
-    def paychex_benefits_login(self, *args):
-        """ Mock requests to the benefits login.fcc URL """
-        return self.build_response()
 
     @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
               path=r'.*?401kstart$')
@@ -86,8 +86,9 @@ class JsonMock(object):
         return self.build_response({'d': '/LandingRedirect.aspx'})
 
 
-class ContextMock(object):
+class ContextMock(PychexMock):
     def __init__(self, context):
+        super(ContextMock, self).__init__()
         self.context = context
 
 
@@ -106,11 +107,25 @@ class ContextHtmlMock(ContextMock, HtmlMock):
               path=r'.*?login\.fcc$')
     def paychex_login(self, *args):
         """ Mock requests to the Paychex login.fcc URL """
-        common_data_password = self.context.paychex.common_data['PASSWORD']
-        if common_data_password == self.context.password:
+        password = None
+        if hasattr(self.context, 'paychex'):
+            password = self.context.paychex.password
+        if not password or password == self.context.password:
             return self.build_response(content='<html></html>')
         else:
             return self.build_response('paychex_login_invalid.fcc')
+
+    @urlmatch(scheme='https', netloc=r'benefits\.paychex\.com',
+              path=r'.*?login\.fcc$')
+    def paychex_benefits_login(self, *args):
+        """ Mock requests to the benefits login.fcc URL """
+        password = None
+        if hasattr(self.context, 'benefits_online'):
+            password = self.context.benefits_online.password
+        if not password or password == self.context.password:
+            return self.build_response()
+        else:
+            return self.build_response('benefits_ssologin_es.html')
 
 
 class ContextXmlMock(ContextMock, XmlMock):
@@ -141,23 +156,23 @@ def mock_request(context, *mock_func):
 
 @contextmanager
 def mock_login_requests(context):
-    """ Helper method to mock all requests needed for logging in """
+    """ Helper method to mock all requests needed for logging in to paychex """
     with mock_request(context,
                       HtmlMock().paychex_start,
                       ContextJsonMock(context).paychex_security_image,
                       JsonMock().paychex_process_login,
-                      ContextHtmlMock(context).paychex_login):
+                      ContextHtmlMock(context).paychex_login,
+                      HtmlMock().paychex_benefits_sso,
+                      ContextHtmlMock(context).paychex_benefits_login):
         yield
 
 
 @contextmanager
-def mock_benefits_requests(context):
+def mock_benefits_requests(context, http_status=200):
     """ Helper to mock all requests made in the get_account_summary method """
     with mock_request(context,
-                      HtmlMock().paychex_benefits_sso,
-                      HtmlMock().paychex_benefits_login,
-                      HtmlMock().paychex_401k_start,
-                      HtmlMock().paychex_401k_login,
-                      HtmlMock().paychex_401k_summary,
-                      HtmlMock().paychex_401k_balance):
+                      HtmlMock(http_status).paychex_401k_start,
+                      HtmlMock(http_status).paychex_401k_login,
+                      HtmlMock(http_status).paychex_401k_summary,
+                      HtmlMock(http_status).paychex_401k_balance):
         yield

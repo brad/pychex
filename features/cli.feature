@@ -20,6 +20,11 @@ Feature: Authorize to Paychex
     And I run the account_summary command
     Then I should see my account summary
 
+  Scenario: Print Paychex account summary as json
+    Given I run the authorize command
+    And I run the account_summary command with json output
+    Then I should see my account summary as json
+
   Scenario: Try to print account summary before authorizing
     Given I have not authorized the CLI
     And I run the account_summary command

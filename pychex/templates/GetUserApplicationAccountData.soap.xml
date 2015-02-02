@@ -3,9 +3,8 @@
         xmlns:s="http://www.w3.org/2001/XMLSchema"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <SOAP-ENV:Body>
-        <tns:GetUserApplicationAccountData
-                xmlns:tns="OneSourceService.asmx">
-            <tns:userId>{USER}</tns:userId>
+        <tns:GetUserApplicationAccountData xmlns:tns="OneSourceService.asmx">
+            <tns:userId>{username}</tns:userId>
         </tns:GetUserApplicationAccountData>
     </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>

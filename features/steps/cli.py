@@ -3,6 +3,8 @@ This file is for all tests related to the CLI client
 """
 from __future__ import unicode_literals
 
+import sys
+
 from behave import given, then, step
 from mock import MagicMock
 
@@ -65,21 +67,23 @@ def authorize(context, input_mock, getpass_mock, image_open_mock):
     """ Test running the authorize method """
     with mock_login_requests(context):
         with mock_request(context, FileMock().security_image_gif):
-            getpass_mock.return_value = context.password
-            input_mock.return_value = context.security_answer
-            arguments = {
-                'authorize': True,
-                '--config': context.config_file,
-                '<username>': context.username
-            }
-            pychex_cli = PychexCli(arguments)
-            input_mock.assert_called_once_with(
-                'Is this your security image (Y/n)? ')
-            assert image_open_mock.call_count == 1
-            if context.security_answer in ['yes', 'y', 'ye', '']:
-                getpass_mock.assert_called_once_with(
-                    'Password (input hidden): ')
-                assert pychex_cli.username == context.username
+            mock_func = ContextXmlMock(context).paychex_account_data
+            with mock_request(context, mock_func):
+                getpass_mock.return_value = context.password
+                input_mock.return_value = context.security_answer
+                arguments = {
+                    'authorize': True,
+                    '--config': context.config_file,
+                    '<username>': context.username
+                }
+                pychex_cli = PychexCli(arguments)
+                input_mock.assert_called_once_with(
+                    'Is this your security image (Y/n)? ')
+                assert image_open_mock.call_count == 1
+                if context.security_answer in ['yes', 'y', 'ye', '']:
+                    getpass_mock.assert_called_once_with(
+                        'Password (input hidden): ')
+                    assert pychex_cli.username == context.username
 
 
 @step('the config file should contain the encrypted credentials')
@@ -106,11 +110,16 @@ def cfg_credentials(context):
     assert cfg_txt.find(context.password) == -1
 
 
+@step('I run the account_summary command with json output')
+def run_account_summary_json(context):
+    run_account_summary(context, json=True)
+
+
 @step('I run the account_summary command')
-def run_account_summary(context):
+def run_account_summary(context, json=False):
     # Make sure the password check passes in the paychex_login mock
     context.paychex = MagicMock()
-    context.paychex.common_data = {'PASSWORD': context.password}
+    context.paychex.password = context.password
     # Reset the stdout capture
     context.stdout_capture.truncate(0)
     context.stdout_capture.seek(0)
@@ -122,37 +131,30 @@ def run_account_summary(context):
                 arguments = {
                     'authorize': False,
                     'account_summary': True,
-                    '--config': context.config_file
+                    '--config': context.config_file,
+                    '--json': json
                 }
                 try:
                     PychexCli(arguments)
-                except:
-                    pass
+                except Exception:
+                    assert False, 'Exception: %s' % sys.exc_info()[1]
+
+
+@step('I should see my account summary as json')
+def print_account_summary_json(context):
+    import json
+    with open('./features/files/cli_fake_summary.json') as fake_summary_json:
+        fake_summary_dict = json.loads(fake_summary_json.read())
+    capture_value_dict = json.loads(context.stdout_capture.getvalue())
+    assert capture_value_dict == fake_summary_dict, capture_value_dict
 
 
 @step('I should see my account summary')
-def print_account_summary(context):
-    assert context.stdout_capture.getvalue() == \
-"""Current balance: $XX,XXX.XX
-Vested balance: $XX,XXX.XX
-Personal RoR: X.X%
-
-  percent  symbol    fund               shares  balance     prospectus
----------  --------  ---------------  --------  ----------  ------------
-     9.79  FNAMW     FAKE NAME W [1]   103.572  $6,644.72   [2]
-    10.21  FNAMX     FAKE NAME X [3]   214.321  $6,929.78   [4]
-    31.58  FNAMY     FAKE NAME Y [5]    13.179  $21,434.13  [6]
-    48.42  FNAMZ     FAKE NAME Z [7]    26.624  $32,863.86  [8]
-
-[1] http://www.example.com/?product=FUNDS&custno=1&FUNDID=1
-[2] http://www.example.com/?product=PROSP&custno=1&FUNDID=1
-[3] http://www.example.com/?product=FUNDS&custno=1&FUNDID=2
-[4] http://www.example.com/?product=PROSP&custno=1&FUNDID=2
-[5] http://www.example.com/?product=FUNDS&custno=1&FUNDID=3
-[6] http://www.example.com/?product=PROSP&custno=1&FUNDID=3
-[7] http://www.example.com/?product=FUNDS&custno=1&FUNDID=4
-[8] http://www.example.com/?product=PROSP&custno=1&FUNDID=4
-"""
+def print_account_summary(context, json=False):
+    with open('./features/files/cli_fake_summary.txt') as fake_summary:
+        fake_summary_str = fake_summary.read()
+    capture_value = context.stdout_capture.getvalue()
+    assert capture_value == fake_summary_str, capture_value
 
 
 @then('we remind the user to authorize')

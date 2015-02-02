@@ -3,9 +3,14 @@
 .coverage*
 coverage
 htmlcov
+build
 .tox
 env
 dist
 
 features/environment_NOCOMMIT.py
 pychex*.cfg
+
+docs/build/
+docs/doctrees/
+docs/html/

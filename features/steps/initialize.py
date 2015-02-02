@@ -10,7 +10,7 @@ from nose.tools import assert_equals
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 
-from pychex import Paychex
+from pychex import Paychex, BenefitsOnline
 
 
 @given('I create a Paychex object')
@@ -38,32 +38,61 @@ def paychex_urls(context):
     base_url = 'https://landing.paychex.com'
     assert context.paychex.base_url == base_url
     assert context.paychex.login_url == '%s/ssologin/Login.aspx' % base_url
-    assert context.paychex.benefits_url == 'https://benefits.paychex.com'
+
+
+@given('I create a BenefitsOnline object')
+def create_benefits_online(context):
+    """ Test creating a BenifitsOnline object """
+    context.benefits_online = BenefitsOnline(context.bol_username,
+                                             context.password)
+
+
+@step('the BenefitsOnline object contains the needed urls')
+def benefits_online_urls(context):
+    """ Check that the RetirementServices object has the URLs it needs """
+    assert context.benefits_online.benefits_url == \
+        'https://benefits.paychex.com'
+
+
+@step('the RetirementServices object contains the needed urls')
+def retirement_services_urls(context):
+    """ Check that the RetirementServices object has the URLs it needs """
+    assert context.benefits_online.retirement_services.benefits_url == \
+        'https://benefits.paychex.com'
 
 
 @step('the Paychex object contains content-type shortcuts')
 def content_types(context):
     """ Check that the Paychex object has the content-types it needs """
-    content_type = {'content-type': 'application/json; charset=utf-8'}
-    assert context.paychex.app_json == content_type
-    content_type['content-type'] = 'text/html; charset=utf-8'
+    content_type = {'content-type': 'text/html; charset=utf-8'}
     assert context.paychex.text_html == content_type
 
 
 @step('the Paychex object contains a session')
-def contains_session(context):
+def paychex_contains_sessions(context):
     """ Check that the Paychex object has a session """
-    assert type(context.paychex.browser.session) == Session
-    assert type(context.paychex.adapter) == HTTPAdapter
-    assert context.paychex.adapter.max_retries.total == 3
-    text_html = context.paychex.text_html['content-type']
-    assert context.paychex.browser.session.headers['content-type'] == text_html
+    _contains_session(context.paychex)
 
 
-@step('the Paychex object contains initialized common_data')
-def initialized_common_data(context):
-    """ Check that the Paychex object has the expected common_data """
-    assert_equals(context.paychex.common_data, {"USER": context.username})
+@step('the BenefitsOnline object contains a session')
+def bol_contains_sessions(context):
+    """ Check that the BenifitsOnline object has a session """
+    _contains_session(context.benefits_online)
+
+
+@step('the RetirementServices object contains a session')
+def rs_contains_sessions(context):
+    """ Check that the RetirementServices object has a session """
+    _contains_session(context.benefits_online.retirement_services)
+
+
+def _contains_session(obj):
+    """ Check that the specified object has a session """
+    assert type(obj.browser.session) == Session
+    assert type(obj.adapter) == HTTPAdapter
+    assert obj.adapter.max_retries.total == 3
+    text_html = obj.text_html['content-type']
+    assert obj.browser.session.headers['content-type'] == text_html
 
 
 @step('the Paychex object contains the correct security image path')
@@ -87,16 +116,43 @@ def get_security_image(context):
 
 @step('the Paychex object contains a {name} member variable set to {value}')
 def paychex_variable(context, name, value):
-    _paychex_variable(context, name, value)
+    _obj_variable(context, context.paychex,  name, value)
 
 
 @step('while mocking, the Paychex object contains a {name} member variable '
       'set to {value}')
 def paychex_variable_while_mocking(context, name, value):
-    _paychex_variable(context, name, value, mocking_only=True)
+    _obj_variable(context, context.paychex, name, value, mocking_only=True)
 
 
-def _paychex_variable(context, name, value, mocking_only=False):
+@step('the BenefitsOnline object contains a {name} member variable set to '
+      '{value}')
+def benefits_online_variable(context, name, value):
+    _obj_variable(context, context.benefits_online,  name, value)
+
+
+@step('the BenefitsOnline object contains a {name} member variable of '
+      'type:{var_type}')
+def benefits_online_variable_type(context, name, var_type):
+    assert_equals(getattr(context.benefits_online, name).__class__.__name__,
+                  var_type)
+
+
+@step('the RetirementServices object contains a {name} member variable set to '
+      '{value}')
+def retirement_services_variable(context, name, value):
+    _obj_variable(context, context.benefits_online.retirement_services, name,
+                  value)
+
+
+@step('while mocking, the RetirementServices object contains a {name} member '
+      'variable set to {value}')
+def rs_variable_while_mocking(context, name, value):
+    _obj_variable(context, context.benefits_online.retirement_services, name,
+                  value, mocking_only=True)
+
+
+def _obj_variable(context, obj, name, value, mocking_only=False):
     """
     Check that a boolean, None, string, or dict variable matches what is
     given in the scenario
@@ -113,7 +169,7 @@ def _paychex_variable(context, name, value, mocking_only=False):
             value = json.loads(value)
     else:
         value = value.replace('"', '')
-    assert_equals(getattr(context.paychex, name), value)
+    assert_equals(getattr(obj, name), value)
 
 
 @step('we have raised an exception:{exception_type}')

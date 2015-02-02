@@ -1,1 +1,1 @@
-include LICENSE AUTHORS README.rst requirements/* docs/* pychex/templates/*
+include CHANGELOG.rst LICENSE AUTHORS README.rst requirements/* docs/* pychex/templates/*
