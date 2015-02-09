@@ -7,7 +7,7 @@ Pychex: Paychex unleashed
 .. image:: https://coveralls.io/repos/brad/pychex/badge.png?branch=master
    :target: https://coveralls.io/r/brad/pychex?branch=master
 
-.. image:: https://readthedocs.org/projects/pychex/badge/?version=latest
+.. image:: https://readthedocs.org/projects/pychex/badge/?version=stable
    :target: http://pychex.readthedocs.org/en/stable/
    :alt: Documentation Status
 
