@@ -1,6 +1,6 @@
 docopt>=0.6.0,<0.7.0
 lxml>=3.6,<3.7
-MechanicalSoup>=0.5,<0.6
+MechanicalSoup>=0.6,<0.7
 ordereddict>=1.0,<2.0
 Pillow>=3.4,<3.5
 requests>=2.11,<2.12
