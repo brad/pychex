@@ -4,4 +4,4 @@ MechanicalSoup>=0.7,<0.8
 ordereddict>=1.0,<2.0
 Pillow>=4.2,<4.3
 requests>=2.18,<2.19
-tabulate>=0.7.0,<0.8.0
+tabulate>=0.8,<0.9
