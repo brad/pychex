@@ -131,7 +131,7 @@ class PychexCli:
         paychex.post_username()
         img_dat = requests.get(paychex.get_security_image()).content
         # Show the security image to the user for recognition
-        Image.open(BytesIO(img_dat)).show()
+        Image.open(BytesIO(img_dat)).resize((256, 256)).show()
         choice = self.get_input('Is this your security image (Y/n)? ')
         # input returns the empty string for "enter"
         chose_yes = choice in set(['yes', 'y', 'ye', ''])
