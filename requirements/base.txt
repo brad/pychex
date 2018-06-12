@@ -3,5 +3,5 @@ lxml>=4.2,<4.3
 MechanicalSoup>=0.9
 ordereddict>=1.0,<2.0
 Pillow>=5.1,<5.2
-requests>=2.18,<2.19
+requests>=2.19,<2.20
 tabulate>=0.8,<0.9
